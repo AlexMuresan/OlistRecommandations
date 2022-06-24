@@ -59,18 +59,6 @@ class RecommendationEngine:
         )
 
         # # Adding each recommendet item's price
-        # recommendations_final = (
-        #     pd.merge(
-        #         recommendations_final,
-        #         self.order_information,
-        #         on="product_id",
-        #         how="inner",
-        #     )
-        #     .drop_duplicates(subset="product_id")[
-        #         ["product_id", "product_category_name", "score", "price"]
-        #     ]
-        #     .sort_values(by="score", ascending=False)
-        # )
         recommendations_final = (
             pd.merge(
                 recommendations_final,
