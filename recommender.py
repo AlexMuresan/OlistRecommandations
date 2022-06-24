@@ -5,23 +5,29 @@ from sklearn.metrics.pairwise import cosine_similarity
 class RecommendationEngine:
     def __init__(self, df, products_metadata, order_information, translate_dict):
         self.df = df
+        self.pivot_df = df.pivot_table(
+            index="customer_unique_id", columns="product_id", values="review_score"
+        )
         self.products_metadata = products_metadata
         self.order_information = order_information
-        self.df_imputed = self.df.fillna(self.df.mean(axis=0))
+        self.df_imputed = self.pivot_df.fillna(self.pivot_df.mean(axis=0))
         self.similarity_matrix = cosine_similarity(self.df_imputed.values)
         self.translate_dict = translate_dict
 
-    def get_recommendation(self, customer_idx, nr_of_items=2):
-        # Saving the customer id for later refference
-        customer_id = self.df.iloc[customer_idx].name
+    def get_recommendation(self, customer_idx, nr_of_items=2, cluster=False):
+        if cluster:
+            df = self.get_clustered_df(customer_idx)
+            df_imputed, similarity_matrix = self.recalculate_matrices(df)
+        else:
+            df = self.pivot_df
+            df_imputed = self.df_imputed
+            similarity_matrix = self.similarity_matrix
 
         # Retrieving similarity of current customer with other customers
-        similarity_scores = list(enumerate(self.similarity_matrix[customer_idx]))
+        similarity_scores = list(enumerate(similarity_matrix[customer_idx]))
 
         # Getting the products that were not rated by the current customer
-        unrated_products = self.df.iloc[customer_idx][
-            self.df.iloc[customer_idx].isna()
-        ].index
+        unrated_products = df.iloc[customer_idx][df.iloc[customer_idx].isna()].index
 
         # We're using the similarity scores as weights for the collaborative filtering
         weights = [x[1] for x in similarity_scores]
@@ -30,7 +36,7 @@ class RecommendationEngine:
         # 1. Multiply scores of unrated products with similarity scores (weights)
         # 2. Get the mean of the result for each product
         # 3. Sort the values based on this mean
-        product_ratings = (self.df[unrated_products].T * weights).T
+        product_ratings = (df[unrated_products].T * weights).T
         product_ratings = product_ratings.iloc[[x[0] for x in similarity_scores]].mean()
         recommendations = product_ratings.sort_values(ascending=False)[:nr_of_items]
 
@@ -58,7 +64,7 @@ class RecommendationEngine:
             recommendations_tmp, recommendations_df, on="product_id", how="inner"
         )
 
-        # # Adding each recommendet item's price
+        # Adding each recommendet item's price
         recommendations_final = (
             pd.merge(
                 recommendations_final,
@@ -74,9 +80,36 @@ class RecommendationEngine:
 
         return recommendations_final
 
+    def get_clustered_df(self, customer_idx):
+        customer_id = self.pivot_df.iloc[customer_idx].name
+        items_bought = list(
+            self.df[self.df["customer_unique_id"] == customer_id]
+            .drop_duplicates("product_id")["product_id"]
+            .values
+        )
+        users_with_same_items = self.df[self.df["product_id"].isin(items_bought)]
+
+        df_same_items_full = pd.merge(
+            users_with_same_items["customer_unique_id"],
+            self.df,
+            on="customer_unique_id",
+            how="inner",
+        ).drop_duplicates()
+        df_same_items_full = df_same_items_full.pivot_table(
+            index="customer_unique_id", columns="product_id", values="review_score"
+        )
+
+        return df_same_items_full
+
+    def recalculate_matrices(self, df):
+        tmp_df_imputed = df.fillna(df.mean(axis=0))
+        tmp_similarity_matrix = cosine_similarity(tmp_df_imputed.values)
+
+        return tmp_df_imputed, tmp_similarity_matrix
+
     def get_bought_items(self, customer_idx, nr_of_items=2):
-        rated_items_df = self.df.iloc[customer_idx][
-            self.df.iloc[customer_idx].notnull()
+        rated_items_df = self.pivot_df.iloc[customer_idx][
+            self.pivot_df.iloc[customer_idx].notnull()
         ].reset_index()
         rated_items_df.columns = ["product_id", "rating"]
         rated_items_df = rated_items_df.sort_values(by="rating", ascending=False)
