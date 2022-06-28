@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class RecommendationEngine:
     def __init__(self, df, products_metadata, order_information, translate_dict):
-        self.df = df
+        self.original_df = df
         self.pivot_df = df.pivot_table(
             index="customer_unique_id", columns="product_id", values="review_score"
         )
@@ -15,13 +15,19 @@ class RecommendationEngine:
         self.translate_dict = translate_dict
 
     def get_recommendation(self, customer_idx, nr_of_items=2, cluster=False):
+        customer_id = self.pivot_df.iloc[customer_idx].name
+        original_idx = customer_idx
+
         if cluster:
+            print(f"Clustering using custommer: {customer_id}")
             df = self.get_clustered_df(customer_idx)
             df_imputed, similarity_matrix = self.recalculate_matrices(df)
+            customer_idx = df_imputed.index.get_loc(customer_id)
         else:
             df = self.pivot_df
             df_imputed = self.df_imputed
             similarity_matrix = self.similarity_matrix
+            customer_idx = original_idx
 
         # Retrieving similarity of current customer with other customers
         similarity_scores = list(enumerate(similarity_matrix[customer_idx]))
@@ -83,15 +89,17 @@ class RecommendationEngine:
     def get_clustered_df(self, customer_idx):
         customer_id = self.pivot_df.iloc[customer_idx].name
         items_bought = list(
-            self.df[self.df["customer_unique_id"] == customer_id]
+            self.original_df[self.original_df["customer_unique_id"] == customer_id]
             .drop_duplicates("product_id")["product_id"]
             .values
         )
-        users_with_same_items = self.df[self.df["product_id"].isin(items_bought)]
+        users_with_same_items = self.original_df[
+            self.original_df["product_id"].isin(items_bought)
+        ]
 
         df_same_items_full = pd.merge(
             users_with_same_items["customer_unique_id"],
-            self.df,
+            self.original_df,
             on="customer_unique_id",
             how="inner",
         ).drop_duplicates()
