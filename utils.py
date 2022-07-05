@@ -42,7 +42,9 @@ def preprocess_dataframes(dataframes: dict) -> dict:
 
 def join_dataframes(dataframes: dict) -> pd.core.frame.DataFrame:
     unique_id_df = pd.merge(
-        dataframes["orders_df"][["order_id", "customer_id"]],
+        dataframes["orders_df"][
+            ["order_id", "customer_id", "order_purchase_timestamp"]
+        ],
         dataframes["customer_df"][["customer_id", "customer_unique_id"]],
         on=["customer_id"],
         how="inner",
@@ -50,7 +52,7 @@ def join_dataframes(dataframes: dict) -> pd.core.frame.DataFrame:
 
     product_and_order_id_df = pd.merge(
         dataframes["orders_df"][["order_id", "customer_id"]],
-        dataframes["order_items_df"][["order_id", "product_id"]],
+        dataframes["order_items_df"][["order_id", "product_id", "price"]],
         on=["order_id"],
         how="inner",
     )

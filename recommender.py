@@ -19,7 +19,7 @@ class RecommendationEngine:
         original_idx = customer_idx
 
         if cluster:
-            print(f"Clustering using custommer: {customer_id}")
+            # print(f"Clustering using custommer: {customer_id}")
             df = self.get_clustered_df(customer_idx)
             df_imputed, similarity_matrix = self.recalculate_matrices(df)
             customer_idx = df_imputed.index.get_loc(customer_id)
@@ -84,7 +84,7 @@ class RecommendationEngine:
             .sort_values(by="score", ascending=False)
         )
 
-        return recommendations_final
+        return recommendations_final, customer_id
 
     def get_clustered_df(self, customer_idx):
         customer_id = self.pivot_df.iloc[customer_idx].name
