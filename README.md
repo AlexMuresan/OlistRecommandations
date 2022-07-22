@@ -10,6 +10,7 @@ This repository contains a **collabrative filtering** implementation created for
 * `filtering_accuracy.ipynb` - shows a comparison between using naive clustering and not using any clustering at all.
 * `profit_improvement.ipynb` - a short simulation that can be changed in order to showcase the improvements a simple recommender system can bring
 * `dataframes_examples.ipynb` - contains examples of how some of the dataframes look, including the pivoted dataframe that we use for collaborative filtering
+* `cosine_similarity.ipynb` - contains examples that explain how cosine similarity works
 
 ### Scripts
 
