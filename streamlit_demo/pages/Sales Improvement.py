@@ -188,7 +188,12 @@ if __name__ == "__main__":
             "customer_unique_id"
         ].values
 
-    sales_percentage = st.slider("Sales percentage", 0, 100, 10)
+    # sales_percentage = st.slider("Sales percentage", 0, 100, 10)
+    sales_percentage = st.selectbox(
+        "Sales percentage",
+        (0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+        1,
+    )
     (increased_monthly_profit, increased_monthly_percentage,) = get_increased_profit(
         recommendationengine,
         monthly_profit,

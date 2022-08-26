@@ -3,6 +3,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class RecommendationEngine:
+    # TODO: write documentation for functions
     def __init__(self, df, products_metadata, order_information, translate_dict):
         self.original_df = df
         self.pivot_df = df.pivot_table(
@@ -11,6 +12,7 @@ class RecommendationEngine:
         self.products_metadata = products_metadata
         self.order_information = order_information
         self.df_imputed = self.pivot_df.fillna(self.pivot_df.mean(axis=0))
+        # TODO: evaluate time expense and memory footprint
         self.similarity_matrix = cosine_similarity(self.df_imputed.values)
         self.translate_dict = translate_dict
 

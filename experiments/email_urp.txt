@@ -1,0 +1,59 @@
+// Online Java Compiler
+// Use this editor to write, compile and run your Java code online
+// Online Java Compiler
+// Use this editor to write, compile and run your Java code online
+
+class URP {
+    public static double calculate(double avgu1,double avgu2,double SDu1,double SDu2)
+ {
+	 float urp=(float) Math.abs(avgu1-avgu2);
+//	 System.out.println("URP  ="+urp); 
+	 float temp2=(float) Math.abs(SDu1-SDu2);//More improvment than below line
+
+	 float temp4=(float) ((double)(urp)+(temp2));
+
+	 double temp3=1+Math.exp(temp4);
+
+	 urp=(float) (1-(1/temp3));//Original code
+
+	// urp=(float) temp3;
+//	 System.out.println("  temp2 ="+temp2+"  temp3 = "+temp3+" urp = "+urp+" temp4 = "+temp4);
+	 return urp;
+ }
+}
+
+class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, World!");
+        URP urp = new URP();
+        
+        // This should calculate URP between users
+        // user_m = [4 3 5 4 2]
+        // 'avg: 3.6
+        // 'std': 1.019803902718557
+
+        // user_n = [5 1 0 0 4]
+        // 'avg': 2.0
+        // 'std': 2.0976176963403033
+        double urp_users = urp.calculate(
+            3.6, 2.0,
+            1.019803902718557,
+            2.0976176963403033);
+        System.out.println("URP between USERS m and n: " + urp_users);
+        
+        // This should calculate URP between items
+        // item_1 = [4 5 4 2 4]
+        // 'avg: 3.8
+        // 'std': 0.9797958971132712
+
+        // item_2 = [3 1 2 1 2]
+        // 'avg': 1.8
+        // 'std': 0.7483314773547883
+        double urp_items = urp.calculate(
+            3.8, 1.8, 
+            0.9797958971132712, 
+            0.7483314773547883);
+        System.out.println("URP between ITEMS 1 and 2: " + urp_items);
+    }
+    
+}
