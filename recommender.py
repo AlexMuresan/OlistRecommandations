@@ -1,10 +1,20 @@
+import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+
+from itr_similarity import itr
 
 
 class RecommendationEngine:
     # TODO: write documentation for functions
-    def __init__(self, df, products_metadata, order_information, translate_dict):
+    def __init__(
+        self,
+        df,
+        products_metadata,
+        order_information,
+        translate_dict,
+        sim_method="cosine",
+    ):
         self.original_df = df
         self.pivot_df = df.pivot_table(
             index="customer_unique_id", columns="product_id", values="review_score"
@@ -12,8 +22,14 @@ class RecommendationEngine:
         self.products_metadata = products_metadata
         self.order_information = order_information
         self.df_imputed = self.pivot_df.fillna(self.pivot_df.mean(axis=0))
+        self.sim_method = sim_method
+
         # TODO: evaluate time expense and memory footprint
-        self.similarity_matrix = cosine_similarity(self.df_imputed.values)
+        if self.sim_method == "cosine":
+            self.similarity_matrix = cosine_similarity(self.df_imputed.values)
+        if self.sim_method == "itr":
+            self.similarity_matrix = itr(self.df_imputed.values)
+
         self.translate_dict = translate_dict
 
     def get_recommendation(self, customer_idx, nr_of_items=2, cluster=False):
@@ -38,7 +54,10 @@ class RecommendationEngine:
         unrated_products = df.iloc[customer_idx][df.iloc[customer_idx].isna()].index
 
         # We're using the similarity scores as weights for the collaborative filtering
-        weights = [x[1] for x in similarity_scores]
+        if self.sim_method == "cosine":
+            weights = [x[1] for x in similarity_scores]
+        if self.sim_method == "itr":
+            weights = [np.ceil(x[1]) for x in similarity_scores]
 
         # Calculating inferred ratings as such:
         # 1. Multiply scores of unrated products with similarity scores (weights)
@@ -113,7 +132,10 @@ class RecommendationEngine:
 
     def recalculate_matrices(self, df):
         tmp_df_imputed = df.fillna(df.mean(axis=0))
-        tmp_similarity_matrix = cosine_similarity(tmp_df_imputed.values)
+        if self.sim_method == "cosine":
+            tmp_similarity_matrix = cosine_similarity(tmp_df_imputed.values)
+        if self.sim_method == "itr":
+            tmp_similarity_matrix = itr(tmp_df_imputed.values)
 
         return tmp_df_imputed, tmp_similarity_matrix
 
